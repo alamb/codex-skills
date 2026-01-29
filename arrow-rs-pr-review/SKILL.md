@@ -9,6 +9,8 @@ Follow this workflow to review an arrow-rs PR for correctness, tests, documentat
 
 ## Collect PR context
 
+- First ask if you should checkout the PR. If the answer is yes, check it out with `gh`
+  - Example: `gh co -f https://github.com/apache/arrow-rs/pull/8930`
 - Use `get_gh_content.sh` to fetch the PR description and comments, then verify claims against the diff and code.
   - Example: `bash ~/bin/get_gh_content.sh <PR_URL>`
 - Call out inaccuracies or missing details in the PR text.
