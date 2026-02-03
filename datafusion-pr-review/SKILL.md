@@ -11,6 +11,7 @@ Follow this workflow to review a DataFusion PR for correctness, tests, documenta
 
 - First ask if you should checkout the PR. If yes, check it out with `gh`.
   - Example: `gh co -f https://github.com/apache/datafusion/pull/19722`
+- Fetch the merge base via `git fetch apache`
 - Use `get_gh_content.sh` to fetch the PR description and comments, then verify claims against the diff and code.
   - Example: `bash ~/bin/get_gh_content.sh <PR_URL>`
 - Call out inaccuracies or missing details in the PR text.
