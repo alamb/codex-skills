@@ -1,81 +1,141 @@
 ---
 name: datafusion-backport
-description: Backport a specific Apache DataFusion PR commit to a release branch (for example apache/branch-52) by cherry-picking the commit, resolving conflicts safely, running required verification (`cargo test --profile=ci --test sqllogictests` and `nice cargo nextest run`), and reporting final status. Use when a user asks to backport a DataFusion PR or commit onto a maintenance branch.
+description: Backport a merged Apache DataFusion PR commit onto a maintenance branch (for example apache/branch-52), including safe cherry-pick conflict resolution, required verification (`cargo test --profile=ci --test sqllogictests` and `nice cargo nextest run`), and a ready-to-run `gh pr create` command. Use when a user asks to backport a DataFusion PR or commit.
 ---
 
 # DataFusion Backport
 
-Use this workflow to backport one commit from a PR onto a release branch.
+Use this workflow to backport one commit from a merged PR onto a release branch.
 
-## Gather relevant data
+## Inputs
 
-* Backport branch: The user must tell you what branch to backport to. For example, to backport to 52, you use the apache/branch-52 branch
-* PR being backported. The user must tell you the PR to backport. For example, https://github.com/apache/datafusion/pull/20192
-* The commit can be found using `gh pr view https://github.com/apache/datafusion/pull/20192 --json number,state,mergedAt,mergeCommit,commits`
+Collect these inputs first:
 
+- Target branch (for example `apache/branch-52`).
+- PR URL (for example `https://github.com/apache/datafusion/pull/20192`).
+- Optional explicit commit SHA to backport (if not provided, derive it from PR metadata).
 
-## Create a new branch for the backport
+## Preflight
 
-Create a new branch named `alamb/backport_XXXX` for the backport where `XXXX` is the PR number we are backporting. For example, to create a branch for backporting PR 1234 use commands like
+1. Ensure the worktree is clean before starting.
+2. Fetch latest remote refs.
+3. Confirm the PR is merged and gather metadata.
 
+Use:
+
+```bash
+git status --porcelain
+git fetch apache
+gh pr view <pr-url> --json number,title,state,mergedAt,mergeCommit,commits,author,url
 ```
+
+If `git status --porcelain` is non-empty, stop and ask the user before proceeding.
+
+If the PR is not merged, stop and ask the user how to proceed.
+
+## Determine commit to cherry-pick
+
+1. If the user provided a commit SHA, use it.
+2. Otherwise use `mergeCommit.oid` from `gh pr view`.
+3. If `mergeCommit` is null or ambiguous, ask the user to confirm the exact commit to backport.
+4. Keep scope limited to the requested change; do not add unrelated commits.
+
+## Create backport branch
+
+1. Check out the target branch.
+2. Create a new backport branch.
+
+Naming convention:
+
+- `<github-handle>/backport_<pr_number>`
+
+Example for user `alamb`:
+
+```bash
 git checkout apache/branch-52
 git checkout -b alamb/backport_1234
 ```
 
-
 ## Cherry-pick
 
-- Run `git cherry-pick <commit>`.
-- If cherry-pick succeeds, proceed to verification.
-- If conflicts occur, continue with conflict resolution.
+Run:
+
+```bash
+git cherry-pick <commit>
+```
+
+If cherry-pick succeeds, continue to required verification.
+
+If conflicts occur, continue to conflict resolution.
 
 ## Resolve conflicts
 
-- Identify conflicts via `git status --short`.
-- Locate conflict markers via:
-  `rg -n "^(<<<<<<<|=======|>>>>>>>)" <conflicted-files>`.
-- Preserve intended PR behavior while adapting to target-branch APIs.
-- Prefer minimal, targeted edits over broad rewrites.
-- Ensure no conflict markers remain.
+1. Identify conflicted files.
+2. Remove conflict markers.
+3. Preserve intended PR behavior while adapting to target-branch APIs.
+4. Prefer minimal, targeted edits over broad rewrites.
+5. Stage resolved files.
+6. Continue cherry-pick.
 
+Use:
+
+```bash
+git status --short
+git diff --name-only --diff-filter=U
+rg -n "^(<<<<<<<|=======|>>>>>>>)" <conflicted-files>
+git add <resolved-files>
+git cherry-pick --continue
+```
+
+If `git cherry-pick --continue` reports more conflicts, repeat this section until complete.
 
 ## Run required verification
 
-- Run `cargo test --profile=ci --test sqllogictests`.
-- Run `nice cargo nextest run`.
-- If failures occur, fix regressions and rerun.
+Run both commands:
 
-## Complete cherry-pick
-
-- Stage resolved files with `git add <files>`.
-- Run `git cherry-pick --continue`.
-
-
-## 7. Report outcome
-
-- Include:
-  - cherry-picked commit
-  - conflict files and resolutions
-
-Propose a `gh` command to create a pull request that has:
-- The title of the backport PR with the original PR title prefixed with the target branch (for example `[branch-52] ORIGINAL PR TITLE`)
-
-
-This is a good example:
-PR: https://github.com/apache/datafusion/pull/20509
-Title: [branch-52] fix: validate inter-file ordering in eq_properties() (#20329)
-Body:
+```bash
+cargo test --profile=ci --test sqllogictests
+nice cargo nextest run
 ```
-- Part of https://github.com/apache/datafusion/issues/20287
-- Closes https://github.com/apache/datafusion/issues/20508 on branch-52
+
+If failures occur, fix regressions introduced by the backport and rerun until passing, or report a blocker clearly.
+
+## Report outcome
+
+Report:
+
+- Target branch.
+- Backport branch.
+- PR URL and PR number.
+- Cherry-picked commit SHA.
+- Conflict files and concise resolution summary (or "no conflicts").
+- Verification commands run and pass/fail status.
+
+## Propose pull request command
+
+Provide a concrete `gh` command to create the backport PR:
+
+```bash
+gh pr create \
+  --base <target-branch> \
+  --head <github-handle>/backport_<pr_number> \
+  --title "[branch-XX] <original-pr-title> (#<original-pr-number>)" \
+  --body-file <path-to-pr-body.md>
+```
+
+Title format must prefix the original PR title with the target branch, for example:
+
+- `[branch-52] fix: validate inter-file ordering in eq_properties() (#20329)`
+
+Use this body pattern:
+
+```markdown
+- Part of <tracking-issue-url>
+- Closes <backport-issue-url> on <branch-name>
 
 This PR:
-- Backports https://github.com/apache/datafusion/pull/20329 from @adriangb to the branch-52 line
+- Backports <original-pr-url> from @<author> to the <branch-name> line
 ```
-
-
-
 
 ## Guardrails
 
