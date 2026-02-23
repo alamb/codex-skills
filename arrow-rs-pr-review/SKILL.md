@@ -48,7 +48,7 @@ To test coverage in multiple crates, you must run a single command such as `carg
 Then review the results:
 - Open `target/llvm-cov/html/index.html` and inspect each changed file's HTML report.
 - Use “next uncovered line (L)” to find gaps.
-- Report uncovered lines that map to new/changed logic or error paths. Include the HTML report path and line numbers.
+- Report uncovered lines that map to new/changed logic or error paths. Include the full file path of the HTML report and line numbers.
 - Ignore any “mismatched data” warnings.
 - Prefer unit tests near the implementation when coverage is missing.
 
