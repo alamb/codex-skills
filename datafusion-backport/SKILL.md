@@ -148,6 +148,31 @@ This PR:
 Here are some other examples:
 - https://github.com/apache/datafusion/pull/20792
 
+## Update tracking issue
+
+If the user provided a release or tracking issue (for example `#20855`), update that issue after the backport PR has been created.
+
+Workflow:
+
+1. Read the current issue body.
+2. Replace the relevant `TODO` entry for the backported issue with the created backport PR URL.
+3. Preserve all unrelated text and checklist items exactly.
+4. Leave unrelated `TODO` entries unchanged.
+
+Use:
+
+```bash
+gh issue view <tracking-issue-number> --repo apache/datafusion --json body
+gh issue edit <tracking-issue-number> --repo apache/datafusion --body-file <updated-body.md>
+```
+
+Example replacement:
+
+- Before: `https://github.com/apache/datafusion/issues/20267 / @alamb / TODO`
+- After: `https://github.com/apache/datafusion/issues/20267 / @alamb / https://github.com/apache/datafusion/pull/20877`
+
+Do not update the tracking issue until the backport PR URL is known.
+
 
 ## Guardrails
 
