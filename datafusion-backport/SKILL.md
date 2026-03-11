@@ -117,11 +117,17 @@ Provide a concrete `gh` command to create the backport PR:
 
 ```bash
 gh pr create \
+  --repo apache/datafusion \
   --base <target-branch> \
-  --head <github-handle>/backport_<pr_number> \
+  --head <github-handle>:<github-handle>/backport_<pr_number> \
   --title "[branch-XX] <original-pr-title> (#<original-pr-number>)" \
   --body-file <path-to-pr-body.md>
 ```
+
+Important:
+
+- When the backport branch name includes a slash such as `<github-handle>/backport_<pr_number>`, `gh pr create` must use `--head <owner>:<branch>` rather than `--head <branch>`.
+- Without the `owner:` prefix, GitHub CLI may interpret the branch name incorrectly and fail with errors such as `Head sha can't be blank`, `Base sha can't be blank`, `No commits between ...`, or `Head ref must be a branch`.
 
 Title format must prefix the original PR title with the target branch, for example:
 
@@ -136,6 +142,10 @@ Use this body pattern:
 This PR:
 - Backports <original-pr-url> from @<author> to the <branch-name> line
 ```
+
+Here are some other examples:
+- https://github.com/apache/datafusion/pull/20792
+
 
 ## Guardrails
 
