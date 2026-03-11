@@ -91,10 +91,12 @@ If `git cherry-pick --continue` reports more conflicts, repeat this section unti
 
 ## Run required verification
 
-Run both commands:
+Run these commands:
 
 ```bash
-cargo test --profile=ci --test sqllogictests
+nice ./ci/scripts/rust_fmt.sh
+nice ./ci/scripts/rust_clippy.sh
+nice cargo test --profile=ci --test sqllogictests
 nice cargo nextest run
 ```
 
