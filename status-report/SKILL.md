@@ -83,6 +83,8 @@ gh auth refresh -s read:project
 - Do not draft a proposed update for an item that has no matched or clearly related activity in the selected time window.
 - If an item has no matched activity, list it separately as `No activity in window` rather than proposing text for the issue.
 - If the user needs stronger matching, inspect the relevant issue or PR directly before drafting the update.
+- Recent activity should be collected across all visible repositories by default, not just the board owner's org.
+- When associating activity from another repository back to a board item, label the association as inferred unless the board item or linked discussion makes the relationship explicit.
 
 ## Step 4: Present the list to the user
 

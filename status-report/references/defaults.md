@@ -31,7 +31,7 @@ The collector script uses `gh project item-list --query` with the board-view fil
 - has one of the default project statuses
 - does not have the `epic` label
 
-Recent activity is collected with `gh search issues` using:
+Recent activity is collected with `gh search issues` across all visible repositories using:
 
 - `commenter:<login>`
 - `author:<login>`
@@ -48,3 +48,5 @@ When presenting results, separate:
 - other recent activity that does not belong to an open board item
 
 Use the item title as the visible identifier in summaries, with the issue URL in parentheses.
+
+Board queries remain scoped to the configured project owner, but user activity collection should be broad by default and include work in any visible repository.

@@ -7,7 +7,7 @@ environment without extra Python dependencies.
 Workflow:
 1. Query the target GitHub Project V2 board with `gh project item-list`.
 2. Apply the skill's assignee / label / project-status filters.
-3. Query recent GitHub activity for the assignee with `gh search issues`.
+3. Query recent GitHub activity for the assignee with `gh search issues` across all visible repositories.
 4. Match exact item URLs back to board items when possible.
 5. Emit JSON for the assistant to turn into a human-readable report.
 
@@ -229,10 +229,11 @@ def fetch_recent_activity(org: str, assignee: str, since: str) -> List[Dict[str,
     Multiple search sources can map to the same URL, so the result is deduped
     and annotated with the matching sources.
     """
+    del org
     queries = {
-        "commenter": ["--owner", org, "--commenter", assignee, "--updated", f">={since}", "--sort", "updated"],
-        "author": ["--owner", org, "--author", assignee, "--updated", f">={since}", "--sort", "updated"],
-        "reviewed-by": ["reviewed-by:" + assignee, "--owner", org, "--updated", f">={since}", "--sort", "updated"],
+        "commenter": ["--commenter", assignee, "--updated", f">={since}", "--sort", "updated"],
+        "author": ["--author", assignee, "--updated", f">={since}", "--sort", "updated"],
+        "reviewed-by": ["reviewed-by:" + assignee, "--updated", f">={since}", "--sort", "updated"],
     }
     merged: Dict[str, Dict[str, Any]] = {}
     for source, query_args in queries.items():
