@@ -147,6 +147,8 @@ This PR:
 
 Here are some other examples:
 - https://github.com/apache/datafusion/pull/20792
+- https://github.com/apache/datafusion/pull/20883
+- https://github.com/apache/datafusion/pull/20879
 
 ## Update tracking issue
 
