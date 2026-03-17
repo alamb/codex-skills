@@ -1,0 +1,4 @@
+interface:
+  display_name: "Status Report"
+  short_description: "Draft board status updates from GitHub activity."
+  default_prompt: "Use $status-report to gather my assigned board items, match recent GitHub activity, and draft update comments."
