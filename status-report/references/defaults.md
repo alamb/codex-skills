@@ -23,7 +23,7 @@ The board URL that motivated this skill is:
 
 - `https://github.com/orgs/influxdata/projects/144/views/38`
 
-The collector script uses `gh project item-list --query` with the board-view filter semantics:
+Use `gh project item-list --query` with the board-view filter semantics:
 
 - issue or pull request is open
 - assigned to the target login
@@ -38,6 +38,10 @@ Recent activity is collected with `gh search issues` across all visible reposito
 - `reviewed-by:<login>`
 
 This is intentionally broad. After collecting results, match exact item URLs first. Keep anything unmatched in an `other` section and review it manually before drafting updates.
+
+For narrow windows such as "today" or "last 3 hours", capture the exact current timestamp and apply a client-side cutoff using `updatedAt` after the broad GitHub search query. `gh search issues` is date-oriented, so do not rely on it alone for hour-level filtering.
+
+Cross-repo matching is common for this workflow because the board items often track upstream Apache work. Treat these associations as inferred unless the board item directly links the same issue or pull request. This is especially relevant for release tickets such as DataFusion, arrow-rs, object_store, and Parquet work.
 
 The board query requires a GitHub token with `read:project`.
 

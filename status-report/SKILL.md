@@ -7,7 +7,7 @@ description: Prepare board-driven GitHub status updates by gathering assigned pr
 
 Use this skill to turn a GitHub board view plus a recent-activity window into draft issue updates and optional comment text.
 
-Prefer the bundled collector script for the data-gathering step. The script uses `gh project item-list` and `gh search issues` directly so the workflow stays aligned with the GitHub CLI.
+In Codex, gather the raw data by running `gh` commands directly from the top-level assistant shell and do the matching locally in the assistant.
 
 ## Defaults
 
@@ -35,29 +35,41 @@ Read [defaults.md](./references/defaults.md) if the user does not restate the bo
 - If the user gives an explicit anchor such as "since Friday", convert it to an absolute date before proceeding.
 - If the last-update boundary is not clear, ask a single direct question before drafting summaries.
 - If the user wants a first pass immediately, state the assumption clearly and use a short window such as the last 7 days.
+- For short windows such as "today" or "last 3 hours", record the exact current timestamp first and state the absolute window in the report. GitHub search only filters by date, so use `--updated '>=YYYY-MM-DD'` as a coarse filter and then apply the precise timestamp cutoff locally using each item's `updatedAt`.
 
 ## Step 2: Collect the raw data
 
-Run:
+Run these commands directly from the current shell:
 
 ```bash
-python3 /Users/andrewlamb/.codex/skills/status-report/scripts/collect_status_report.py --since YYYY-MM-DD --json
+gh project item-list 144 \
+  --owner influxdata \
+  --limit 100 \
+  --format json \
+  --query 'assignee:alamb is:open status:Next,"In Progress","Blocked/Waiting","In Review" label:team/query,query,team/upstream,upstream,area/influxql,"Apache Upstream" -label:epic'
 ```
 
-Override defaults only when needed:
+For recent activity, query all three sources:
 
 ```bash
-python3 /Users/andrewlamb/.codex/skills/status-report/scripts/collect_status_report.py \
-  --org influxdata \
-  --project-number 144 \
-  --assignee alamb \
-  --since YYYY-MM-DD \
-  --status "In Progress" \
-  --label "Apache Upstream" \
-  --json
+gh search issues \
+  --include-prs \
+  --limit 100 \
+  --json title,url,repository,state,updatedAt,isPullRequest \
+  --commenter alamb \
+  --updated '>=YYYY-MM-DD' \
+  --sort updated
 ```
 
-The script returns:
+```bash
+gh search issues --include-prs --limit 100 --json title,url,repository,state,updatedAt,isPullRequest --commenter alamb --updated '>=YYYY-MM-DD' --sort updated
+gh search issues --include-prs --limit 100 --json title,url,repository,state,updatedAt,isPullRequest --author alamb --updated '>=YYYY-MM-DD' --sort updated
+gh search issues --include-prs --limit 100 --json title,url,repository,state,updatedAt,isPullRequest 'reviewed-by:alamb' --updated '>=YYYY-MM-DD' --sort updated
+```
+
+Override defaults only when needed by changing the owner, project number, assignee, labels, statuses, or date cutoff in those commands.
+
+From those results, derive:
 
 - `open_items`
 - `recent_activity`
@@ -85,6 +97,9 @@ gh auth refresh -s read:project
 - If the user needs stronger matching, inspect the relevant issue or PR directly before drafting the update.
 - Recent activity should be collected across all visible repositories by default, not just the board owner's org.
 - When associating activity from another repository back to a board item, label the association as inferred unless the board item or linked discussion makes the relationship explicit.
+- For release-tracking board items, upstream work in `apache/datafusion`, `apache/arrow-rs`, `apache/object_store`, `apache/parquet-format`, or similar repos may still be the best available evidence. Only infer that mapping when the board item explicitly tracks that upstream release or contribution stream.
+- If several upstream PRs clearly support the same board item, group them into one concise update rather than listing them as separate status lines.
+- Keep truly unrelated upstream work in `Other`, even if it happened in the same ecosystem.
 
 ## Step 4: Present the list to the user
 
@@ -118,6 +133,7 @@ Favor factual language over narrative. Good update patterns:
 - "Blocked waiting on review in Y."
 
 Only draft update text when there is supporting activity. Do not imply progress that the data does not show.
+When the evidence is inferred rather than exact, say so briefly in the status or evidence sentence.
 
 ## Step 6: Ask before posting comments
 
