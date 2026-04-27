@@ -15,6 +15,7 @@ Follow this workflow to review a DataFusion PR for correctness, tests, documenta
 - Use `get_gh_content.sh` to fetch the PR description and comments, then verify claims against the diff and code.
   - Example: `bash ~/bin/get_gh_content.sh <PR_URL>`
 - Call out inaccuracies or missing details in the PR text.
+- Treat existing PR CI test results as the default evidence for test execution. Do not rerun local tests that CI has already validated unless CI is missing, clearly insufficient for the changed behavior, or you need a focused repro to confirm a suspected issue.
 
 ## Compute the diff
 
@@ -34,6 +35,8 @@ Check for and report issues, highest priority first:
 4. Changed code covered by tests (new or existing).
 5. Breaking public API changes (explicitly call these out).
 
+When evaluating tests, prefer reviewing the tests in the diff, existing nearby tests, and the PR's CI results over rerunning the same test commands locally.
+
 ## Breaking public API changes
 
 Any breaking public API change should be documented in the upgrading guide:
@@ -51,3 +54,4 @@ When flagging a breaking change, include an example of the old pattern and the n
 - Present findings in severity order, with file references and line numbers.
 - Explicitly note public API changes and whether they are breaking.
 - If no issues are found, state that clearly and mention any residual testing gaps.
+- If you did not run local tests because CI already covered them, say so briefly instead of reporting that as a gap.
